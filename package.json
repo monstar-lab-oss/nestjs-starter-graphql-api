@@ -1,5 +1,5 @@
 {
-  "name": "nestjs-starter-rest-api",
+  "name": "nestjs-starter-graphql-api",
   "private": true,
   "version": "1.0.0",
   "description": "NestJS Starter REST API Repository",
