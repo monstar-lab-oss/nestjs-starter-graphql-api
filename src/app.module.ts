@@ -15,7 +15,7 @@ import { UserModule } from './user/user.module';
     SharedModule,
     GraphQLModule.forRoot({
       autoSchemaFile: true,
-      include: [ArticleModule],
+      include: [ArticleModule, AuthModule],
     }),
   ],
   providers: [AppService],

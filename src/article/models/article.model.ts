@@ -2,7 +2,7 @@ import { Field, Int, ObjectType } from '@nestjs/graphql';
 import { Expose } from 'class-transformer';
 // import { Author } from './author.model';
 
-@ObjectType()
+@ObjectType('Article')
 export class ArticleModel {
   @Expose()
   @Field((type) => Int)
