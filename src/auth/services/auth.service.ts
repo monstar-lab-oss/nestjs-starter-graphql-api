@@ -62,10 +62,19 @@ export class AuthService {
     return this.getAuthToken(ctx, user);
   }
 
-  async refreshToken(ctx: RequestContext): Promise<AuthTokenOutput> {
+  async refreshToken(
+    ctx: RequestContext,
+    refreshToken: string,
+  ): Promise<AuthTokenOutput> {
     this.logger.log(ctx, `${this.refreshToken.name} was called`);
 
-    const user = await this.userService.findById(ctx, ctx.user.id);
+    const subject = this.jwtService.decode(refreshToken);
+
+    if (!subject) {
+      throw new UnauthorizedException('Invalid token');
+    }
+
+    const user = await this.userService.findById(ctx, subject.sub);
     if (!user) {
       throw new UnauthorizedException('Invalid user id');
     }

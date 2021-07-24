@@ -21,15 +21,31 @@ export class AuthResolver {
     @Args('input') input: RegisterInput,
   ): Promise<RegisterOutput> {
     this.logger.log(ctx, `${this.registerLocal.name} was called`);
+
     return await this.authService.register(ctx, input);
   }
 
-  @Mutation((returns) => AuthTokenOutput)
+  @Mutation((returns) => AuthTokenOutput, {
+    name: 'login',
+  })
   async login(
     @ReqContext() ctx: RequestContext,
     @Args('credential') credential: LoginInput,
   ): Promise<AuthTokenOutput> {
     this.logger.log(ctx, `${this.login.name} was called`);
+
     return this.authService.login(ctx, credential);
+  }
+
+  @Mutation((returns) => AuthTokenOutput, {
+    name: 'refreshToken',
+  })
+  async refreshToken(
+    @ReqContext() ctx: RequestContext,
+    @Args('refreshToken', { type: () => String }) refreshToken: string,
+  ): Promise<AuthTokenOutput> {
+    this.logger.log(ctx, `${this.refreshToken.name} was called`);
+
+    return await this.authService.refreshToken(ctx, refreshToken);
   }
 }
