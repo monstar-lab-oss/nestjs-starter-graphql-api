@@ -1,12 +1,16 @@
+import { Field, ObjectType } from '@nestjs/graphql';
 import { Expose } from 'class-transformer';
 
 import { ROLE } from '../constants/role.constant';
 
+@ObjectType()
 export class AuthTokenOutput {
   @Expose()
+  @Field()
   accessToken: string;
 
   @Expose()
+  @Field()
   refreshToken: string;
 }
 
