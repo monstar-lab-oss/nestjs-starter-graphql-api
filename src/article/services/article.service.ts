@@ -13,7 +13,6 @@ import {
 } from '../dtos/article-input.dto';
 import { ArticleOutput } from '../dtos/article-output.dto';
 import { Article } from '../entities/article.entity';
-import { ArticleModel } from '../models/article.model';
 import { ArticleRepository } from '../repositories/article.repository';
 import { ArticleAclService } from './article-acl.service';
 
@@ -85,10 +84,13 @@ export class ArticleService {
     return { articles: articlesOutput, count };
   }
 
-  async getArticleById(id: number): Promise<ArticleModel> {
+  async getArticleById(
+    ctx: RequestContext,
+    id: number,
+  ): Promise<ArticleOutput> {
     const article = await this.repository.getById(id);
 
-    return plainToClass(ArticleModel, article, {
+    return plainToClass(ArticleOutput, article, {
       excludeExtraneousValues: true,
     });
   }

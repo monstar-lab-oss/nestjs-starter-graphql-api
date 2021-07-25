@@ -31,7 +31,7 @@ async function bootstrap() {
   // Create the default admin user if it doesn't already exist.
   const user = await userService.findByUsername(ctx, defaultAdmin.username);
   if (!user) {
-    await userService.createUser(defaultAdmin);
+    await userService.createUser(ctx, defaultAdmin);
   }
 
   await app.close();

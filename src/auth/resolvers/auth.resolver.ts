@@ -1,13 +1,13 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
-import { AppLogger } from 'src/shared/logger/logger.service';
-import { ReqContext } from 'src/shared/request-context/req-context.decorator';
-import { RequestContext } from 'src/shared/request-context/request-context.dto';
 
 import { LoginInput } from '../dtos/auth-login-input.dto';
 import { RegisterInput } from '../dtos/auth-register-input.dto';
 import { RegisterOutput } from '../dtos/auth-register-output.dto';
 import { AuthTokenOutput } from '../dtos/auth-token-output.dto';
 import { AuthService } from '../services/auth.service';
+import { AppLogger } from './../../shared/logger/logger.service';
+import { ReqContext } from './../../shared/request-context/req-context.decorator';
+import { RequestContext } from './../../shared/request-context/request-context.dto';
 
 @Resolver()
 export class AuthResolver {

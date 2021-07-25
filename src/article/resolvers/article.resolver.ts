@@ -1,29 +1,19 @@
-import {
-  Args,
-  Int,
-  Parent,
-  Query,
-  ResolveField,
-  Resolver,
-} from '@nestjs/graphql';
-import { ReqContext } from 'src/shared/request-context/req-context.decorator';
-import { RequestContext } from 'src/shared/request-context/request-context.dto';
+import { Args, Int, Query, Resolver } from '@nestjs/graphql';
 
-import { ArticleModel } from '../models/article.model';
-import { AuthorModel } from '../models/author.model';
+import { ArticleOutput } from '../dtos/article-output.dto';
 import { ArticleService } from '../services/article.service';
+import { ReqContext } from './../../shared/request-context/req-context.decorator';
+import { RequestContext } from './../../shared/request-context/request-context.dto';
 
-@Resolver((of) => ArticleModel)
+@Resolver()
 export class ArticleResolver {
   constructor(private articleService: ArticleService) {}
 
-  @Query((returns) => ArticleModel, { name: 'article' })
-  async getArticle(@Args('id', { type: () => Int }) id: number) {
-    return await this.articleService.getArticleById(id);
+  @Query((returns) => ArticleOutput, { name: 'article' })
+  async getArticle(
+    @ReqContext() ctx: RequestContext,
+    @Args('id', { type: () => Int }) id: number,
+  ) {
+    return await this.articleService.getArticleById(ctx, id);
   }
-
-  // @ResolveField('author', (returns) => [Author])
-  // async getArticleAuthor(@Parent() article: Article) {
-  //   const { authorId } = Article;
-  // }
 }

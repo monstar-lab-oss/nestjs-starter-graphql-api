@@ -19,16 +19,16 @@ export class UserService {
     this.logger.setContext(UserService.name);
   }
   async createUser(
-    // ctx: RequestContext,
+    ctx: RequestContext,
     input: CreateUserInput,
   ): Promise<UserOutput> {
-    // this.logger.log(ctx, `${this.createUser.name} was called`);
+    this.logger.log(ctx, `${this.createUser.name} was called`);
 
     const user = plainToClass(User, input);
 
     user.password = await hash(input.password, 10);
 
-    // this.logger.log(ctx, `calling ${UserRepository.name}.saveUser`);
+    this.logger.log(ctx, `calling ${UserRepository.name}.saveUser`);
     await this.repository.save(user);
 
     return plainToClass(UserOutput, user, {

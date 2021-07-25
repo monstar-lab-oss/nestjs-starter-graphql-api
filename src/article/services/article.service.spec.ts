@@ -2,6 +2,8 @@ import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { ROLE } from '../../auth/constants/role.constant';
+import { AppLogger } from '../../shared/logger/logger.service';
+import { RequestContext } from '../../shared/request-context/request-context.dto';
 import { UserOutput } from '../../user/dtos/user-output.dto';
 import { User } from '../../user/entities/user.entity';
 import { UserService } from '../../user/services/user.service';
@@ -9,13 +11,11 @@ import {
   CreateArticleInput,
   UpdateArticleInput,
 } from '../dtos/article-input.dto';
-import { ArticleRepository } from '../repositories/article.repository';
-import { ArticleAclService } from './article-acl.service';
-import { ArticleService } from './article.service';
-import { RequestContext } from '../../shared/request-context/request-context.dto';
-import { AppLogger } from '../../shared/logger/logger.service';
 import { ArticleOutput } from '../dtos/article-output.dto';
 import { Article } from '../entities/article.entity';
+import { ArticleRepository } from '../repositories/article.repository';
+import { ArticleService } from './article.service';
+import { ArticleAclService } from './article-acl.service';
 
 describe('ArticleService', () => {
   let service: ArticleService;
@@ -162,9 +162,12 @@ describe('ArticleService', () => {
         updatedAt: currentDate,
       };
 
-      mockedRepository.getById.mockResolvedValue(expectedOutput);
+      jest
+        .spyOn(mockedRepository, 'getById')
+        .mockImplementation(async () => expectedOutput);
 
-      expect(await service.getArticleById(ctx, id)).toEqual(expectedOutput);
+      const result = await service.getArticleById(ctx, id);
+      expect(result).toEqual(expectedOutput);
     });
 
     it('should fail when article is not found and return the repository error', async () => {

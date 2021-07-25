@@ -1,9 +1,9 @@
 import { UseGuards } from '@nestjs/common';
 import { Query, Resolver } from '@nestjs/graphql';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
 import { UserOutput } from '../dtos/user-output.dto';
 import { UserService } from '../services/user.service';
+import { JwtAuthGuard } from './../../auth/guards/jwt-auth.guard';
 import { AppLogger } from './../../shared/logger/logger.service';
 import { ReqContext } from './../../shared/request-context/req-context.decorator';
 import { RequestContext } from './../../shared/request-context/request-context.dto';

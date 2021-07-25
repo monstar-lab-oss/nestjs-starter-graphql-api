@@ -37,7 +37,7 @@ export class AuthService {
     input.roles = [ROLE.USER];
     input.isAccountDisabled = false;
 
-    const registeredUser = await this.userService.createUser(input);
+    const registeredUser = await this.userService.createUser(ctx, input);
     return plainToClass(RegisterOutput, registeredUser, {
       excludeExtraneousValues: true,
     });
