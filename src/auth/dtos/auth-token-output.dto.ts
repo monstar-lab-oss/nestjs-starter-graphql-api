@@ -3,7 +3,7 @@ import { Expose } from 'class-transformer';
 
 import { ROLE } from '../constants/role.constant';
 
-@ObjectType()
+@ObjectType('AuthToken')
 export class AuthTokenOutput {
   @Expose()
   @Field()

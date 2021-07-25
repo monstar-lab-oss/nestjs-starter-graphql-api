@@ -3,7 +3,7 @@ import { Expose } from 'class-transformer';
 
 import { ROLE } from '../../auth/constants/role.constant';
 
-@ObjectType()
+@ObjectType('User')
 export class UserOutput {
   @Expose()
   @Field(() => Int)
