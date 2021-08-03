@@ -3,6 +3,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { GqlExecutionContext } from '@nestjs/graphql';
 import { AuthGuard } from '@nestjs/passport';
 import { Observable } from 'rxjs';
 
@@ -25,5 +26,10 @@ export class JwtRefreshGuard extends AuthGuard(STRATEGY_JWT_REFRESH) {
       throw err || new UnauthorizedException(`${info}`);
     }
     return user;
+  }
+
+  getRequest(ctx: ExecutionContext): any {
+    const context = GqlExecutionContext.create(ctx).getContext();
+    return context.req;
   }
 }

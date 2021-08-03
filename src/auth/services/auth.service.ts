@@ -3,17 +3,18 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { plainToClass } from 'class-transformer';
 
+import { AppLogger } from '../../shared/logger/logger.service';
+import { RequestContext } from '../../shared/request-context/request-context.dto';
+import { UserOutput } from '../../user/dtos/user-output.dto';
 import { UserService } from '../../user/services/user.service';
 import { ROLE } from '../constants/role.constant';
+import { LoginInput } from '../dtos/auth-login-input.dto';
 import { RegisterInput } from '../dtos/auth-register-input.dto';
 import { RegisterOutput } from '../dtos/auth-register-output.dto';
 import {
   AuthTokenOutput,
   UserAccessTokenClaims,
 } from '../dtos/auth-token-output.dto';
-import { UserOutput } from '../../user/dtos/user-output.dto';
-import { AppLogger } from '../../shared/logger/logger.service';
-import { RequestContext } from '../../shared/request-context/request-context.dto';
 
 @Injectable()
 export class AuthService {
@@ -24,6 +25,61 @@ export class AuthService {
     private readonly logger: AppLogger,
   ) {
     this.logger.setContext(AuthService.name);
+  }
+
+  async register(
+    ctx: RequestContext,
+    input: RegisterInput,
+  ): Promise<RegisterOutput> {
+    this.logger.log(ctx, `${this.register.name} was called`);
+
+    // TODO : Setting default role as USER here. Will add option to change this later via ADMIN users.
+    input.roles = [ROLE.USER];
+    input.isAccountDisabled = false;
+
+    const registeredUser = await this.userService.createUser(ctx, input);
+    return plainToClass(RegisterOutput, registeredUser, {
+      excludeExtraneousValues: true,
+    });
+  }
+
+  async login(
+    ctx: RequestContext,
+    credential: LoginInput,
+  ): Promise<AuthTokenOutput> {
+    this.logger.log(ctx, `${this.login.name} was called`);
+
+    const user = await this.validateUser(
+      ctx,
+      credential.username,
+      credential.password,
+    );
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid user credentials');
+    }
+
+    return this.getAuthToken(ctx, user);
+  }
+
+  async refreshToken(
+    ctx: RequestContext,
+    refreshToken: string,
+  ): Promise<AuthTokenOutput> {
+    this.logger.log(ctx, `${this.refreshToken.name} was called`);
+
+    const subject = this.jwtService.decode(refreshToken);
+
+    if (!subject) {
+      throw new UnauthorizedException('Invalid token');
+    }
+
+    const user = await this.userService.findById(ctx, subject.sub);
+    if (!user) {
+      throw new UnauthorizedException('Invalid user id');
+    }
+
+    return this.getAuthToken(ctx, user);
   }
 
   async validateUser(
@@ -46,39 +102,6 @@ export class AuthService {
     }
 
     return user;
-  }
-
-  login(ctx: RequestContext): AuthTokenOutput {
-    this.logger.log(ctx, `${this.login.name} was called`);
-
-    return this.getAuthToken(ctx, ctx.user);
-  }
-
-  async register(
-    ctx: RequestContext,
-    input: RegisterInput,
-  ): Promise<RegisterOutput> {
-    this.logger.log(ctx, `${this.register.name} was called`);
-
-    // TODO : Setting default role as USER here. Will add option to change this later via ADMIN users.
-    input.roles = [ROLE.USER];
-    input.isAccountDisabled = false;
-
-    const registeredUser = await this.userService.createUser(ctx, input);
-    return plainToClass(RegisterOutput, registeredUser, {
-      excludeExtraneousValues: true,
-    });
-  }
-
-  async refreshToken(ctx: RequestContext): Promise<AuthTokenOutput> {
-    this.logger.log(ctx, `${this.refreshToken.name} was called`);
-
-    const user = await this.userService.findById(ctx, ctx.user.id);
-    if (!user) {
-      throw new UnauthorizedException('Invalid user id');
-    }
-
-    return this.getAuthToken(ctx, user);
   }
 
   getAuthToken(

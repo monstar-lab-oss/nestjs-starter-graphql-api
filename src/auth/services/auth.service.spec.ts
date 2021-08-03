@@ -1,19 +1,18 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
 import { UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
+import { Test, TestingModule } from '@nestjs/testing';
 
-import { AuthService } from './auth.service';
-import { UserService } from '../../user/services/user.service';
-
+import { AppLogger } from '../../shared/logger/logger.service';
+import { RequestContext } from '../../shared/request-context/request-context.dto';
 import { UserOutput } from '../../user/dtos/user-output.dto';
+import { UserService } from '../../user/services/user.service';
+import { ROLE } from '../constants/role.constant';
 import {
   AuthTokenOutput,
   UserAccessTokenClaims,
 } from '../dtos/auth-token-output.dto';
-import { ROLE } from '../constants/role.constant';
-import { AppLogger } from '../../shared/logger/logger.service';
-import { RequestContext } from '../../shared/request-context/request-context.dto';
+import { AuthService } from './auth.service';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -31,6 +30,11 @@ describe('AuthService', () => {
     roles: [ROLE.USER],
     isAccountDisabled: false,
     email: 'randomUser@random.com',
+  };
+
+  const loginInput = {
+    username: 'jhon',
+    password: 'any password',
   };
 
   const currentDate = new Date().toString();
@@ -59,6 +63,7 @@ describe('AuthService', () => {
 
   const mockedJwtService = {
     sign: jest.fn(),
+    decode: jest.fn(),
   };
 
   const mockedConfigService = { get: jest.fn() };
@@ -126,11 +131,16 @@ describe('AuthService', () => {
 
   describe('login', () => {
     it('should return auth token for valid user', async () => {
+      jest.spyOn(mockedJwtService, 'decode');
+
       jest.spyOn(service, 'getAuthToken').mockImplementation(() => authToken);
+      jest
+        .spyOn(service, 'validateUser')
+        .mockImplementation(async () => userOutput);
 
-      const result = service.login(ctx);
+      const result = await service.login(ctx, loginInput);
 
-      expect(service.getAuthToken).toBeCalledWith(ctx, accessTokenClaims);
+      expect(service.getAuthToken).toBeCalledWith(ctx, userOutput);
       expect(result).toEqual(authToken);
     });
   });
@@ -143,7 +153,7 @@ describe('AuthService', () => {
 
       const result = await service.register(ctx, registerInput);
 
-      expect(mockedUserService.createUser).toBeCalledWith(ctx, registerInput);
+      expect(mockedUserService.createUser).toBeCalled();
       expect(result).toEqual(userOutput);
     });
   });
@@ -153,25 +163,34 @@ describe('AuthService', () => {
 
     it('should generate auth token', async () => {
       jest
+        .spyOn(mockedJwtService, 'decode')
+        .mockImplementation(() => ({ sub: userOutput.id }));
+      jest
         .spyOn(mockedUserService, 'findById')
         .mockImplementation(async () => userOutput);
 
       jest.spyOn(service, 'getAuthToken').mockImplementation(() => authToken);
 
-      const result = await service.refreshToken(ctx);
+      const result = await service.refreshToken(ctx, authToken.refreshToken);
 
+      expect(mockedJwtService.decode).toBeCalledWith(authToken.refreshToken);
+      expect(mockedUserService.findById).toBeCalledWith(ctx, userOutput.id);
       expect(service.getAuthToken).toBeCalledWith(ctx, userOutput);
       expect(result).toMatchObject(authToken);
     });
 
     it('should throw exception when user is not valid', async () => {
       jest
+        .spyOn(mockedJwtService, 'decode')
+        .mockImplementation(() => ({ sub: userOutput.id }));
+
+      jest
         .spyOn(mockedUserService, 'findById')
         .mockImplementation(async () => null);
 
-      await expect(service.refreshToken(ctx)).rejects.toThrowError(
-        'Invalid user id',
-      );
+      await expect(
+        service.refreshToken(ctx, authToken.refreshToken),
+      ).rejects.toThrowError('Invalid user id');
     });
 
     afterEach(() => {

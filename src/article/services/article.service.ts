@@ -1,9 +1,10 @@
-import { plainToClass } from 'class-transformer';
-
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { plainToClass } from 'class-transformer';
 
 import { Action } from '../../shared/acl/action.constant';
 import { Actor } from '../../shared/acl/actor.constant';
+import { AppLogger } from '../../shared/logger/logger.service';
+import { RequestContext } from '../../shared/request-context/request-context.dto';
 import { User } from '../../user/entities/user.entity';
 import { UserService } from '../../user/services/user.service';
 import {
@@ -14,8 +15,6 @@ import { ArticleOutput } from '../dtos/article-output.dto';
 import { Article } from '../entities/article.entity';
 import { ArticleRepository } from '../repositories/article.repository';
 import { ArticleAclService } from './article-acl.service';
-import { RequestContext } from '../../shared/request-context/request-context.dto';
-import { AppLogger } from '../../shared/logger/logger.service';
 
 @Injectable()
 export class ArticleService {
@@ -89,19 +88,7 @@ export class ArticleService {
     ctx: RequestContext,
     id: number,
   ): Promise<ArticleOutput> {
-    this.logger.log(ctx, `${this.getArticleById.name} was called`);
-
-    const actor: Actor = ctx.user;
-
-    this.logger.log(ctx, `calling ${ArticleRepository.name}.getById`);
     const article = await this.repository.getById(id);
-
-    const isAllowed = this.aclService
-      .forActor(actor)
-      .canDoAction(Action.Read, article);
-    if (!isAllowed) {
-      throw new UnauthorizedException();
-    }
 
     return plainToClass(ArticleOutput, article, {
       excludeExtraneousValues: true,
