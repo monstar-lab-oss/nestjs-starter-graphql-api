@@ -4,6 +4,8 @@ import { NestFactory } from '@nestjs/core';
 
 import { AppModule } from './app.module';
 import { VALIDATION_PIPE_OPTIONS } from './shared/constants';
+import { AllExceptionsFilter } from './shared/filters/all-exceptions.filter';
+import { AppLogger } from './shared/logger/logger.service';
 import { RequestIdMiddleware } from './shared/middlewares/request-id/request-id.middleware';
 
 async function bootstrap() {
@@ -15,6 +17,7 @@ async function bootstrap() {
   app.enableCors();
 
   const configService = app.get(ConfigService);
+  app.useGlobalFilters(new AllExceptionsFilter(configService, new AppLogger()));
   const port = configService.get<number>('port');
   await app.listen(port);
 }

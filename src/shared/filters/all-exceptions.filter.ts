@@ -1,20 +1,20 @@
 import {
   ArgumentsHost,
   Catch,
-  ExceptionFilter,
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
-import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
+import { GqlArgumentsHost, GqlExceptionFilter } from '@nestjs/graphql';
+import { Request, Response } from 'express';
 
 import { REQUEST_ID_TOKEN_HEADER } from '../constants';
-import { AppLogger } from '../logger/logger.service';
 import { BaseApiError } from '../errors/base-api-error';
+import { AppLogger } from '../logger/logger.service';
 import { createRequestContext } from '../request-context/util';
 
 @Catch()
-export class AllExceptionsFilter<T> implements ExceptionFilter {
+export class AllExceptionsFilter<T> implements GqlExceptionFilter {
   /** set logger context */
   constructor(
     private config: ConfigService,
@@ -24,11 +24,10 @@ export class AllExceptionsFilter<T> implements ExceptionFilter {
   }
 
   catch(exception: T, host: ArgumentsHost): any {
-    const ctx = host.switchToHttp();
-    const req: Request = ctx.getRequest<Request>();
-    const res: Response = ctx.getResponse<Response>();
+    const ctx = GqlArgumentsHost.create(host).getContext();
+    const req = <Request>ctx.req;
+    const res = <Response>ctx.req.res;
 
-    const path = req.url;
     const timestamp = new Date().toISOString();
     const requestId = req.headers[REQUEST_ID_TOKEN_HEADER];
     const requestContext = createRequestContext(req);
@@ -73,7 +72,6 @@ export class AllExceptionsFilter<T> implements ExceptionFilter {
       errorName,
       details,
       // Additional meta added by us.
-      path,
       requestId,
       timestamp,
     };
