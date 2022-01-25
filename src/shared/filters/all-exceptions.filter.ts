@@ -24,10 +24,21 @@ export class AllExceptionsFilter<T> implements GqlExceptionFilter {
   }
 
   catch(exception: T, host: ArgumentsHost): any {
-    const ctx = GqlArgumentsHost.create(host).getContext();
-    const req = <Request>ctx.req;
-    const res = <Response>ctx.req.res;
+    let ctx;
+    let req: Request;
+    let res: Response;
 
+    if (host.getType() == 'http') {
+      ctx = host.switchToHttp();
+      req = ctx.getRequest();
+      res = ctx.getResponse();
+    } else {
+      ctx = GqlArgumentsHost.create(host).getContext();
+      req = <Request>ctx.req;
+      res = <Response>ctx.req.res;
+    }
+
+    const query = req.body.query;
     const timestamp = new Date().toISOString();
     const requestId = req.headers[REQUEST_ID_TOKEN_HEADER];
     const requestContext = createRequestContext(req);
@@ -72,6 +83,7 @@ export class AllExceptionsFilter<T> implements GqlExceptionFilter {
       errorName,
       details,
       // Additional meta added by us.
+      query,
       requestId,
       timestamp,
     };
