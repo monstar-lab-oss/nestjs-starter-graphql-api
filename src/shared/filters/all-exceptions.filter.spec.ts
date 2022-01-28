@@ -50,6 +50,7 @@ describe('AllExceptionsFilter', () => {
         url: 'mock-url',
         headers: [],
         header: jest.fn(),
+        body: jest.fn(),
         res: mockResponse,
       },
     };
