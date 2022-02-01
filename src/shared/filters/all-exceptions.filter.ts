@@ -38,7 +38,7 @@ export class AllExceptionsFilter<T> implements GqlExceptionFilter {
       res = <Response>ctx.req.res;
     }
 
-    const query = req.body.query;
+    const path = req.url;
     const timestamp = new Date().toISOString();
     const requestId = req.headers[REQUEST_ID_TOKEN_HEADER];
     const requestContext = createRequestContext(req);
@@ -83,7 +83,7 @@ export class AllExceptionsFilter<T> implements GqlExceptionFilter {
       errorName,
       details,
       // Additional meta added by us.
-      query,
+      path,
       requestId,
       timestamp,
     };

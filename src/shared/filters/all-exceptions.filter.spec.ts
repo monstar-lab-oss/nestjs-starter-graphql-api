@@ -50,7 +50,6 @@ describe('AllExceptionsFilter', () => {
         url: 'mock-url',
         headers: [],
         header: jest.fn(),
-        body: jest.fn(),
         res: mockResponse,
       },
     };
@@ -187,6 +186,17 @@ describe('AllExceptionsFilter', () => {
       expect.objectContaining({
         error: expect.objectContaining({
           requestId: mockRequest.req.headers[REQUEST_ID_TOKEN_HEADER],
+        }),
+      }),
+    );
+  });
+
+  it('should contain request path in response', async () => {
+    filter.catch(mockMessage1, mockContext);
+    expect(mockResponse.json).toBeCalledWith(
+      expect.objectContaining({
+        error: expect.objectContaining({
+          path: mockRequest.req.url,
         }),
       }),
     );
