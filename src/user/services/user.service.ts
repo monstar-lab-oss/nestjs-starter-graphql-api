@@ -1,6 +1,11 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { compare, hash } from 'bcrypt';
 import { plainToClass } from 'class-transformer';
+import { QueryFailedError } from 'typeorm';
 
 import { AppLogger } from '../../shared/logger/logger.service';
 import { RequestContext } from '../../shared/request-context/request-context.dto';
@@ -25,11 +30,17 @@ export class UserService {
     this.logger.log(ctx, `${this.createUser.name} was called`);
 
     const user = plainToClass(User, input);
-
     user.password = await hash(input.password, 10);
 
     this.logger.log(ctx, `calling ${UserRepository.name}.saveUser`);
-    await this.repository.save(user);
+    await this.repository.save(user).catch((err: any) => {
+      if (err.code === 'ER_DUP_ENTRY') {
+        throw new ConflictException(
+          'User with given email/username already exists',
+        );
+      }
+      throw err;
+    });
 
     return plainToClass(UserOutput, user, {
       excludeExtraneousValues: true,
